@@ -1,6 +1,8 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import axios from 'axios';
 import toast from 'react-hot-toast';
+import { authService } from '../services';
+import { setAuthToken } from '../services/api';
+import { MESSAGES } from '../constants';
 
 const AuthContext = createContext(null);
 
@@ -11,7 +13,7 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (token) {
-      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+      setAuthToken(token);
       fetchUser();
     } else {
       setLoading(false);
@@ -20,11 +22,13 @@ export const AuthProvider = ({ children }) => {
 
   const fetchUser = async () => {
     try {
-      const response = await axios.get('/api/auth/me');
-      setUser(response.data.data.user);
+      const response = await authService.getCurrentUser();
+      const userData = response.data?.data?.user || response.data?.user;
+      setUser(userData);
     } catch (error) {
       localStorage.removeItem('token');
-      delete axios.defaults.headers.common['Authorization'];
+      localStorage.removeItem('refreshToken');
+      setUser(null);
     } finally {
       setLoading(false);
     }
@@ -32,50 +36,63 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (email, password) => {
     try {
-      const response = await axios.post('/api/auth/login', { email, password });
-      const { token, refreshToken, user } = response.data.data;
+      const response = await authService.login(email, password);
+      const { token, refreshToken, user: userData } = response.data?.data || response.data;
 
-      localStorage.setItem('token', token);
+      setAuthToken(token);
       localStorage.setItem('refreshToken', refreshToken);
-      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
 
-      setUser(user);
-      toast.success('Login successful!');
-      return { success: true, user };
+      setUser(userData);
+      toast.success(MESSAGES.LOGIN_SUCCESS);
+      return { success: true, user: userData };
     } catch (error) {
-      toast.error(error.response?.data?.message || 'Login failed');
-      return { success: false, error: error.response?.data?.message };
+      const errorMsg = error.response?.data?.message || MESSAGES.LOGIN_FAILED;
+      toast.error(errorMsg);
+      return { success: false, error: errorMsg };
     }
   };
 
   const register = async (userData) => {
     try {
-      const response = await axios.post('/api/auth/register', userData);
-      const { token, refreshToken, user } = response.data.data;
+      const response = await authService.register(userData);
+      const { token, refreshToken, user: user_data } = response.data?.data || response.data;
 
-      localStorage.setItem('token', token);
+      setAuthToken(token);
       localStorage.setItem('refreshToken', refreshToken);
-      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
 
-      setUser(user);
-      toast.success('Registration successful!');
-      return { success: true, user };
+      setUser(user_data);
+      toast.success(MESSAGES.REGISTER_SUCCESS);
+      return { success: true, user: user_data };
     } catch (error) {
-      toast.error(error.response?.data?.message || 'Registration failed');
-      return { success: false, error: error.response?.data?.message };
+      const errorMsg = error.response?.data?.message || MESSAGES.REGISTER_FAILED;
+      toast.error(errorMsg);
+      return { success: false, error: errorMsg };
     }
   };
 
-  const logout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('refreshToken');
-    delete axios.defaults.headers.common['Authorization'];
-    setUser(null);
-    toast.success('Logged out successfully');
+  const logout = async () => {
+    try {
+      await authService.logout();
+    } catch (error) {
+      console.error('Logout error:', error);
+    } finally {
+      localStorage.removeItem('token');
+      localStorage.removeItem('refreshToken');
+      setAuthToken(null);
+      setUser(null);
+      toast.success(MESSAGES.LOGOUT_SUCCESS);
+    }
   };
 
   const updateUser = (updates) => {
     setUser(prev => ({ ...prev, ...updates }));
+  };
+
+  const canAccess = (requiredRole) => {
+    if (!user) return false;
+    if (requiredRole === null) return true;
+    if (Array.isArray(requiredRole)) return requiredRole.includes(user.role);
+    return user.role === requiredRole;
   };
 
   return (
@@ -86,6 +103,7 @@ export const AuthProvider = ({ children }) => {
       logout, 
       loading, 
       updateUser,
+      canAccess,
       isAuthenticated: !!user 
     }}>
       {children}

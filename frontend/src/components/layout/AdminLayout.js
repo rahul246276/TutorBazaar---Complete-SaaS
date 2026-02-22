@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { 
@@ -13,7 +13,7 @@ import {
 } from 'lucide-react';
 
 const AdminLayout = () => {
-  const [isSidebarOpen, setIsSidebarOpen] = React.useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const { logout } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();

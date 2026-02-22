@@ -6,6 +6,10 @@ import { Toaster } from 'react-hot-toast';
 // Context
 import { AuthProvider } from './context/AuthContext';
 
+// Components
+import { ProtectedRoute, TutorRoute, AdminRoute } from './components/ProtectedRoute';
+import { NotFound, ErrorBoundary } from './components/ErrorPages';
+
 // Layouts
 import MainLayout from './components/layout/MainLayout';
 import TutorLayout from './components/layout/TutorLayout';
@@ -47,42 +51,61 @@ const queryClient = new QueryClient({
 
 function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <Router>
-          <Routes>
-            {/* Public Routes */}
-            <Route path="/" element={<MainLayout />}>
-              <Route index element={<Home />} />
-              <Route path="find-tutor" element={<FindTutor />} />
-              <Route path="tutor/:id" element={<TutorProfile />} />
-              <Route path="enquiry" element={<Enquiry />} />
-              <Route path="contact" element={<Contact />} />
-              <Route path="login" element={<Login />} />
-              <Route path="register" element={<Register />} />
-            </Route>
+    <ErrorBoundary>
+      <QueryClientProvider client={queryClient}>
+        <AuthProvider>
+          <Router>
+            <Routes>
+              {/* Public Routes */}
+              <Route path="/" element={<MainLayout />}>
+                <Route index element={<Home />} />
+                <Route path="find-tutor" element={<FindTutor />} />
+                <Route path="tutor/:id" element={<TutorProfile />} />
+                <Route path="enquiry" element={<Enquiry />} />
+                <Route path="contact" element={<Contact />} />
+                <Route path="login" element={<Login />} />
+                <Route path="register" element={<Register />} />
+              </Route>
 
-            {/* Tutor Routes */}
-            <Route path="/tutor" element={<TutorLayout />}>
-              <Route path="dashboard" element={<TutorDashboard />} />
-              <Route path="leads" element={<TutorLeads />} />
-              <Route path="credits" element={<TutorCredits />} />
-              <Route path="profile" element={<TutorProfileEdit />} />
-              <Route path="analytics" element={<TutorAnalytics />} />
-            </Route>
+              {/* Tutor Routes */}
+              <Route
+                path="/tutor"
+                element={
+                  <TutorRoute>
+                    <TutorLayout />
+                  </TutorRoute>
+                }
+              >
+                <Route path="dashboard" element={<TutorDashboard />} />
+                <Route path="leads" element={<TutorLeads />} />
+                <Route path="credits" element={<TutorCredits />} />
+                <Route path="profile" element={<TutorProfileEdit />} />
+                <Route path="analytics" element={<TutorAnalytics />} />
+              </Route>
 
-            {/* Admin Routes */}
-            <Route path="/admin" element={<AdminLayout />}>
-              <Route path="dashboard" element={<AdminDashboard />} />
-              <Route path="tutors" element={<AdminTutors />} />
-              <Route path="leads" element={<AdminLeads />} />
-              <Route path="payments" element={<AdminPayments />} />
-            </Route>
-          </Routes>
-        </Router>
-        <Toaster position="top-right" />
-      </AuthProvider>
-    </QueryClientProvider>
+              {/* Admin Routes */}
+              <Route
+                path="/admin"
+                element={
+                  <AdminRoute>
+                    <AdminLayout />
+                  </AdminRoute>
+                }
+              >
+                <Route path="dashboard" element={<AdminDashboard />} />
+                <Route path="tutors" element={<AdminTutors />} />
+                <Route path="leads" element={<AdminLeads />} />
+                <Route path="payments" element={<AdminPayments />} />
+              </Route>
+
+              {/* 404 Page */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </Router>
+          <Toaster position="top-right" />
+        </AuthProvider>
+      </QueryClientProvider>
+    </ErrorBoundary>
   );
 }
 
