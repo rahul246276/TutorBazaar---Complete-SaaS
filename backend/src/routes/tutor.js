@@ -7,6 +7,89 @@ const Tutor = require('../models/Tutor');
 const Lead = require('../models/Lead');
 const logger = require('../utils/logger');
 
+// Public tutor search
+router.get('/', async (req, res, next) => {
+  try {
+    const { subject, city, search, page = 1, limit = 20 } = req.query;
+    const parsedPage = Math.max(parseInt(page, 10) || 1, 1);
+    const parsedLimit = Math.max(parseInt(limit, 10) || 20, 1);
+
+    const query = {
+      isApproved: true,
+      isActive: true,
+    };
+
+    if (subject) {
+      query['subjects.name'] = new RegExp(subject, 'i');
+    }
+
+    if (city) {
+      query.city = new RegExp(city, 'i');
+    }
+
+    if (search) {
+      query.$or = [
+        { firstName: new RegExp(search, 'i') },
+        { lastName: new RegExp(search, 'i') },
+        { bio: new RegExp(search, 'i') },
+        { headline: new RegExp(search, 'i') },
+        { 'subjects.name': new RegExp(search, 'i') },
+      ];
+    }
+
+    const tutors = await Tutor.find(query)
+      .sort({ isFeatured: -1, 'metrics.rankingScore': -1, createdAt: -1 })
+      .skip((parsedPage - 1) * parsedLimit)
+      .limit(parsedLimit)
+      .select('-password -notifications -preferences -documents')
+      .lean();
+
+    const total = await Tutor.countDocuments(query);
+
+    res.json({
+      success: true,
+      data: {
+        tutors,
+        pagination: {
+          page: parsedPage,
+          limit: parsedLimit,
+          total,
+          pages: Math.ceil(total / parsedLimit),
+        },
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// Public tutor details
+router.get('/:id([0-9a-fA-F]{24})', async (req, res, next) => {
+  try {
+    const tutor = await Tutor.findOne({
+      _id: req.params.id,
+      isApproved: true,
+      isActive: true,
+    })
+      .select('-password -notifications -preferences -documents')
+      .lean();
+
+    if (!tutor) {
+      return res.status(404).json({
+        success: false,
+        message: 'Tutor not found',
+      });
+    }
+
+    res.json({
+      success: true,
+      data: { tutor },
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
 // Get tutor dashboard stats
 router.get('/dashboard', auth, authorize('tutor'), async (req, res, next) => {
   try {
@@ -35,6 +118,49 @@ router.get('/dashboard', auth, authorize('tutor'), async (req, res, next) => {
         },
         recentLeads,
         unreadNotifications,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// Tutor analytics summary
+router.get('/analytics', auth, authorize('tutor'), async (req, res, next) => {
+  try {
+    const tutor = await Tutor.findById(req.userId).lean();
+    const recentLocks = await Lead.find({ 'lockInfo.tutor': req.userId })
+      .sort({ 'lockInfo.lockedAt': -1 })
+      .limit(30)
+      .lean();
+
+    const profileViews = tutor.metrics?.rankingScore ? Math.round(tutor.metrics.rankingScore * 6) : 0;
+    const totalLeads = tutor.metrics?.totalLeads || 0;
+    const conversionRate = tutor.metrics?.conversionRate || 0;
+    const responseRate = tutor.metrics?.responseRate || 0;
+
+    const chartData = recentLocks.map((lead) => ({
+      date: new Date(lead.lockInfo?.lockedAt || lead.createdAt).toISOString().slice(0, 10),
+      unlocked: lead.status === 'locked' || lead.status === 'converted' ? 1 : 0,
+      converted: lead.status === 'converted' ? 1 : 0,
+      views: Math.max(1, Math.round(profileViews / 30)),
+    }));
+
+    res.json({
+      success: true,
+      data: {
+        stats: {
+          profileViews,
+          totalLeads,
+          conversionRate,
+          responseRate,
+          avgResponseTime: tutor.metrics?.avgResponseTime
+            ? `${tutor.metrics.avgResponseTime} mins`
+            : 'N/A',
+          satisfaction: tutor.rating?.average ? Math.round((tutor.rating.average / 5) * 100) : 0,
+          activeSessions: tutor.metrics?.unlockedLeads || 0,
+        },
+        chartData,
       },
     });
   } catch (error) {

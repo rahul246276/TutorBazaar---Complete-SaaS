@@ -17,17 +17,6 @@ export const capitalizeFirstLetter = (text) => {
   return text.charAt(0).toUpperCase() + text.slice(1);
 };
 
-export const getGradeLabel = (grade) => {
-  const gradeMap = {
-    '6-8': 'Classes 6-8',
-    '9-10': 'Classes 9-10',
-    '11-12': 'Classes 11-12',
-    'graduation': 'Graduation',
-    'postgraduation': 'Post Graduation',
-  };
-  return gradeMap[grade] || grade;
-};
-
 export const formatRating = (rating) => {
   if (!rating) return '0';
   return parseFloat(rating).toFixed(1);
@@ -40,9 +29,9 @@ export const getRatingColor = (rating) => {
   return 'text-red-600';
 };
 
-export const formatCurrency = (amount, currency = '₹') => {
-  if (!amount && amount !== 0) return currency + '0';
-  return currency + amount.toLocaleString('en-IN');
+export const formatCurrency = (amount, prefix = 'Rs ') => {
+  if (!amount && amount !== 0) return `${prefix}0`;
+  return `${prefix}${Number(amount).toLocaleString('en-IN')}`;
 };
 
 export const getStatusColor = (status) => {
@@ -56,20 +45,16 @@ export const getStatusColor = (status) => {
     closed: 'bg-gray-100 text-gray-800',
     expired: 'bg-red-100 text-red-800',
     in_progress: 'bg-blue-100 text-blue-800',
+    paid: 'bg-green-100 text-green-800',
+    created: 'bg-yellow-100 text-yellow-800',
+    locked: 'bg-blue-100 text-blue-800',
+    converted: 'bg-green-100 text-green-800',
   };
   return colors[status] || 'bg-gray-100 text-gray-800';
 };
 
 export const getStatusText = (status) => {
   const textMap = {
-    active: 'Active',
-    pending: 'Pending',
-    inactive: 'Inactive',
-    completed: 'Completed',
-    failed: 'Failed',
-    open: 'Open',
-    closed: 'Closed',
-    expired: 'Expired',
     in_progress: 'In Progress',
   };
   return textMap[status] || status;

@@ -14,32 +14,34 @@ export const API_ENDPOINTS = {
   TUTORS_GET: (id) => `/tutors/${id}`,
   TUTORS_DASHBOARD: '/tutors/dashboard',
   TUTORS_UPDATE: '/tutors/profile',
-  TUTORS_LEADS: '/tutors/leads',
+  TUTORS_LEADS_AVAILABLE: '/tutors/leads/available',
+  TUTORS_LEADS_MY: '/tutors/leads/my',
+  TUTORS_LEADS_UNLOCK: (id) => `/tutors/leads/${id}/unlock`,
   TUTORS_CREDITS: '/tutors/credits',
-  TUTORS_CREDITS_TRANSACTIONS: '/tutors/credits/transactions',
+  TUTORS_CREDITS_PURCHASE: '/tutors/credits/purchase',
+  TUTORS_CREDITS_VERIFY: '/tutors/credits/verify',
   TUTORS_ANALYTICS: '/tutors/analytics',
 
   // Students
   STUDENTS_ENQUIRY: '/students/enquiry',
+  STUDENTS_CONTACT: '/students/contact',
   STUDENTS_PROFILE: '/students/profile',
   STUDENTS_UPDATE: '/students/profile',
 
   // Leads
-  LEADS_LIST: '/leads',
+  LEADS_LIST: '/leads/search',
   LEADS_GET: (id) => `/leads/${id}`,
-  LEADS_UNLOCK: (id) => `/leads/${id}/unlock`,
-  LEADS_RESPOND: (id) => `/leads/${id}/respond`,
+  LEADS_STATUS_UPDATE: (id) => `/leads/${id}/status`,
+  LEADS_REDISTRIBUTE: (id) => `/leads/${id}/redistribute`,
 
   // Payments
-  PAYMENTS_LIST: '/payments',
-  PAYMENTS_INITIATE: '/payments/initiate',
-  PAYMENTS_VERIFY: '/payments/verify',
   PAYMENTS_HISTORY: '/payments/history',
 
   // Admin
   ADMIN_DASHBOARD: '/admin/dashboard',
   ADMIN_TUTORS: '/admin/tutors',
-  ADMIN_TUTORS_UPDATE: (id) => `/admin/tutors/${id}`,
+  ADMIN_TUTORS_APPROVE: (id) => `/admin/tutors/${id}/approve`,
+  ADMIN_TUTORS_SUSPEND: (id) => `/admin/tutors/${id}/suspend`,
   ADMIN_LEADS: '/admin/leads',
   ADMIN_PAYMENTS: '/admin/payments',
 };

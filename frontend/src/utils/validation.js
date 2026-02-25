@@ -51,23 +51,24 @@ export const validateLoginForm = (email, password) => {
 
 export const validateRegistrationForm = (data) => {
   const errors = {};
-  
+
   if (!data.firstName) errors.firstName = 'First name is required';
   if (!data.lastName) errors.lastName = 'Last name is required';
-  
+  if (!data.city) errors.city = 'City is required';
+
   errors.email = validateEmail(data.email);
   errors.phone = validatePhone(data.phone);
   errors.password = validatePassword(data.password);
-  
+
   if (data.password !== data.confirmPassword) {
     errors.confirmPassword = MESSAGES.PASSWORDS_DONT_MATCH;
   }
-  
+
   if (!data.role) errors.role = 'Please select a role';
-  
-  // Remove empty error entries
-  Object.keys(errors).forEach(key => !errors[key] && delete errors[key]);
-  
+  if (data.role === 'student' && !data.class) errors.class = 'Class is required for students';
+
+  Object.keys(errors).forEach((key) => !errors[key] && delete errors[key]);
+
   return {
     isValid: Object.keys(errors).length === 0,
     errors,
@@ -77,10 +78,13 @@ export const validateRegistrationForm = (data) => {
 export const validateEnquiryForm = (data) => {
   const errors = {};
   
+  if (!data.firstName) errors.firstName = 'First name is required';
+  if (!data.lastName) errors.lastName = 'Last name is required';
   if (!data.title) errors.title = 'Title is required';
   if (!data.description) errors.description = 'Description is required';
   if (!data.subject) errors.subject = 'Subject is required';
-  if (!data.location) errors.location = 'Location is required';
+  if (!data.city) errors.city = 'City is required';
+  if (!data.grade) errors.grade = 'Class/grade is required';
   
   errors.email = validateEmail(data.email);
   errors.phone = validatePhone(data.phone);

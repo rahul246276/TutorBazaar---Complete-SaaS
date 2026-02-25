@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Search, Users, Award, Shield, ArrowRight, Star } from 'lucide-react';
+import { Search, Users, Award, Shield, ArrowRight } from 'lucide-react';
 
 const Home = () => {
   const features = [

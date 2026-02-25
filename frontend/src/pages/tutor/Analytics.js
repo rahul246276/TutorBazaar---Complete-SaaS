@@ -8,8 +8,7 @@ import { TrendingUp, Users, Eye, Target } from 'lucide-react';
 const Analytics = () => {
   const { data: analyticsData, isLoading } = useQuery(
     ['tutorAnalytics'],
-    () => tutorService.getAnalytics({}),
-    { select: (response) => response.data?.data || {} }
+    () => tutorService.getAnalytics({})
   );
 
   if (isLoading) return <Loading message="Loading analytics..." />;
@@ -27,10 +26,10 @@ const Analytics = () => {
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         {[
-          { title: 'Profile Views', value: stats.profileViews || 0, icon: Eye, color: 'blue' },
-          { title: 'Total Leads', value: stats.totalLeads || 0, icon: Users, color: 'green' },
-          { title: 'Conversion Rate', value: `${stats.conversionRate || 0}%`, icon: Target, color: 'purple' },
-          { title: 'Response Rate', value: `${stats.responseRate || 0}%`, icon: TrendingUp, color: 'orange' },
+          { title: 'Profile Views', value: stats.profileViews || 0, icon: Eye },
+          { title: 'Total Leads', value: stats.totalLeads || 0, icon: Users },
+          { title: 'Conversion Rate', value: `${stats.conversionRate || 0}%`, icon: Target },
+          { title: 'Response Rate', value: `${stats.responseRate || 0}%`, icon: TrendingUp },
         ].map((stat, idx) => {
           const Icon = stat.icon;
           return (
@@ -38,7 +37,7 @@ const Analytics = () => {
               <CardBody className="space-y-3">
                 <div className="flex items-center justify-between">
                   <h3 className="text-sm text-gray-600">{stat.title}</h3>
-                  <Icon className={`h-5 w-5 text-${stat.color}-500`} />
+                  <Icon className="h-5 w-5 text-primary-500" />
                 </div>
                 <p className="text-2xl font-bold text-gray-900">{stat.value}</p>
               </CardBody>

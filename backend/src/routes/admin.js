@@ -332,4 +332,104 @@ router.post('/subscription-plans', auth, authorize('admin'), async (req, res, ne
   }
 });
 
+// Get all leads (admin table view)
+router.get('/leads', auth, authorize('admin'), async (req, res, next) => {
+  try {
+    const {
+      status,
+      page = 1,
+      limit = 20,
+      sortBy = 'createdAt',
+      order = 'desc',
+    } = req.query;
+
+    const parsedPage = Math.max(parseInt(page, 10) || 1, 1);
+    const parsedLimit = Math.max(parseInt(limit, 10) || 20, 1);
+    const query = {};
+
+    if (status) {
+      query.status = status;
+    }
+
+    const sortOptions = {};
+    sortOptions[sortBy] = order === 'asc' ? 1 : -1;
+
+    const leads = await Lead.find(query)
+      .sort(sortOptions)
+      .skip((parsedPage - 1) * parsedLimit)
+      .limit(parsedLimit)
+      .lean();
+
+    const total = await Lead.countDocuments(query);
+
+    res.json({
+      success: true,
+      data: {
+        leads,
+        pagination: {
+          page: parsedPage,
+          limit: parsedLimit,
+          total,
+          pages: Math.ceil(total / parsedLimit),
+        },
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// Get all payments (admin table view)
+router.get('/payments', auth, authorize('admin'), async (req, res, next) => {
+  try {
+    const {
+      status,
+      page = 1,
+      limit = 20,
+      sortBy = 'createdAt',
+      order = 'desc',
+    } = req.query;
+
+    const parsedPage = Math.max(parseInt(page, 10) || 1, 1);
+    const parsedLimit = Math.max(parseInt(limit, 10) || 20, 1);
+    const query = {};
+
+    if (status) {
+      query.status = status;
+    }
+
+    const sortOptions = {};
+    sortOptions[sortBy] = order === 'asc' ? 1 : -1;
+
+    const payments = await Payment.find(query)
+      .populate('user', 'firstName lastName email')
+      .sort(sortOptions)
+      .skip((parsedPage - 1) * parsedLimit)
+      .limit(parsedLimit)
+      .lean();
+
+    const total = await Payment.countDocuments(query);
+    const totalRevenueAgg = await Payment.aggregate([
+      { $match: { status: 'paid' } },
+      { $group: { _id: null, total: { $sum: '$amount' } } },
+    ]);
+
+    res.json({
+      success: true,
+      data: {
+        payments,
+        totalRevenue: totalRevenueAgg[0]?.total || 0,
+        pagination: {
+          page: parsedPage,
+          limit: parsedLimit,
+          total,
+          pages: Math.ceil(total / parsedLimit),
+        },
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
 module.exports = router;

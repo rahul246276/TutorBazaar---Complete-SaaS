@@ -10,8 +10,7 @@ const Payments = () => {
   const [status, setStatus] = useState('all');
   const { data: paymentsData, isLoading } = useQuery(
     ['adminPayments', status],
-    () => adminService.getPayments({ status: status === 'all' ? '' : status, page: 1, limit: 20 }),
-    { select: (response) => response.data?.data || {} }
+    () => adminService.getPayments({ status: status === 'all' ? '' : status, page: 1, limit: 20 })
   );
 
   if (isLoading) return <Loading message="Loading payments..." />;
@@ -38,7 +37,7 @@ const Payments = () => {
       </div>
 
       <div className="flex gap-2 mb-6">
-        {['all', 'completed', 'pending', 'failed'].map(st => (
+        {['all', 'paid', 'created', 'failed', 'refunded'].map(st => (
           <button
             key={st}
             onClick={() => setStatus(st)}
@@ -74,8 +73,8 @@ const Payments = () => {
                   <td className="px-6 py-3 text-sm">{formatDate(payment.createdAt)}</td>
                   <td className="px-6 py-3 text-sm">
                     <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                      payment.status === 'completed' ? 'bg-green-100 text-green-800' :
-                      payment.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                      payment.status === 'paid' ? 'bg-green-100 text-green-800' :
+                      payment.status === 'created' ? 'bg-yellow-100 text-yellow-800' :
                       'bg-red-100 text-red-800'
                     }`}>
                       {payment.status}

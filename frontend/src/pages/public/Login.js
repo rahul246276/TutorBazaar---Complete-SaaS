@@ -42,8 +42,14 @@ const Login = () => {
     try {
       const result = await login(email, password);
       if (result.success) {
-        const from = location.state?.from?.pathname || '/';
-        navigate(from);
+        const from = location.state?.from?.pathname;
+        const roleRoute =
+          result.user?.role === 'admin'
+            ? '/admin/dashboard'
+            : result.user?.role === 'tutor'
+              ? '/tutor/dashboard'
+              : '/';
+        navigate(from || roleRoute);
       } else {
         setErrors({ submit: result.error });
       }

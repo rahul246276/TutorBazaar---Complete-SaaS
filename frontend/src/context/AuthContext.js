@@ -3,6 +3,7 @@ import toast from 'react-hot-toast';
 import { authService } from '../services';
 import { setAuthToken } from '../services/api';
 import { MESSAGES } from '../constants';
+import { clearAuthStorage, getStoredToken, setStoredRefreshToken } from '../utils/storage';
 
 const AuthContext = createContext(null);
 
@@ -11,7 +12,7 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
+    const token = getStoredToken();
     if (token) {
       setAuthToken(token);
       fetchUser();
@@ -26,8 +27,7 @@ export const AuthProvider = ({ children }) => {
       const userData = response.data?.data?.user || response.data?.user;
       setUser(userData);
     } catch (error) {
-      localStorage.removeItem('token');
-      localStorage.removeItem('refreshToken');
+      clearAuthStorage();
       setUser(null);
     } finally {
       setLoading(false);
@@ -40,7 +40,9 @@ export const AuthProvider = ({ children }) => {
       const { token, refreshToken, user: userData } = response.data?.data || response.data;
 
       setAuthToken(token);
-      localStorage.setItem('refreshToken', refreshToken);
+      if (refreshToken) {
+        setStoredRefreshToken(refreshToken);
+      }
 
       setUser(userData);
       toast.success(MESSAGES.LOGIN_SUCCESS);
@@ -58,7 +60,9 @@ export const AuthProvider = ({ children }) => {
       const { token, refreshToken, user: user_data } = response.data?.data || response.data;
 
       setAuthToken(token);
-      localStorage.setItem('refreshToken', refreshToken);
+      if (refreshToken) {
+        setStoredRefreshToken(refreshToken);
+      }
 
       setUser(user_data);
       toast.success(MESSAGES.REGISTER_SUCCESS);
@@ -76,8 +80,7 @@ export const AuthProvider = ({ children }) => {
     } catch (error) {
       console.error('Logout error:', error);
     } finally {
-      localStorage.removeItem('token');
-      localStorage.removeItem('refreshToken');
+      clearAuthStorage();
       setAuthToken(null);
       setUser(null);
       toast.success(MESSAGES.LOGOUT_SUCCESS);

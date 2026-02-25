@@ -1,5 +1,6 @@
 import api from './api';
 import { API_ENDPOINTS } from '../constants';
+import { mapLead, mapPayment, mapTutor } from './transformers';
 
 export const authService = {
   login: (email, password) =>
@@ -19,46 +20,97 @@ export const authService = {
 };
 
 export const tutorService = {
-  getTutors: (params) =>
-    api.get(API_ENDPOINTS.TUTORS_LIST, { params }),
+  getTutors: async (params) => {
+    const response = await api.get(API_ENDPOINTS.TUTORS_LIST, { params });
+    const payload = response.data?.data || {};
+    return {
+      ...payload,
+      tutors: (payload.tutors || []).map(mapTutor),
+    };
+  },
 
-  getTutor: (id) =>
-    api.get(API_ENDPOINTS.TUTORS_GET(id)),
+  getTutor: async (id) => {
+    const response = await api.get(API_ENDPOINTS.TUTORS_GET(id));
+    const tutor = response.data?.data?.tutor || response.data?.tutor || response.data?.data;
+    return mapTutor(tutor);
+  },
 
-  getDashboard: () =>
-    api.get(API_ENDPOINTS.TUTORS_DASHBOARD),
+  getDashboard: async () => {
+    const response = await api.get(API_ENDPOINTS.TUTORS_DASHBOARD);
+    return response.data?.data || {};
+  },
 
   updateProfile: (data) =>
     api.put(API_ENDPOINTS.TUTORS_UPDATE, data),
 
-  getLeads: (params) =>
-    api.get(API_ENDPOINTS.TUTORS_LEADS, { params }),
+  getLeads: async (params = {}) => {
+    const { type = 'available', ...rest } = params;
+    const endpoint = type === 'unlocked' ? API_ENDPOINTS.TUTORS_LEADS_MY : API_ENDPOINTS.TUTORS_LEADS_AVAILABLE;
+    const response = await api.get(endpoint, { params: rest });
+    const payload = response.data?.data || {};
+    return {
+      ...payload,
+      leads: (payload.leads || []).map(mapLead),
+    };
+  },
 
-  getCredits: () =>
-    api.get(API_ENDPOINTS.TUTORS_CREDITS),
+  getCredits: async (params = {}) => {
+    const response = await api.get(API_ENDPOINTS.TUTORS_CREDITS, { params });
+    return response.data?.data || {};
+  },
 
-  getCreditTransactions: (params) =>
-    api.get(API_ENDPOINTS.TUTORS_CREDITS_TRANSACTIONS, { params }),
+  getCreditTransactions: async (params = {}) => {
+    const response = await api.get(API_ENDPOINTS.TUTORS_CREDITS, { params });
+    return response.data?.data?.history || { transactions: [], pagination: {} };
+  },
 
-  getAnalytics: (params) =>
-    api.get(API_ENDPOINTS.TUTORS_ANALYTICS, { params }),
+  getAnalytics: async (params) => {
+    const response = await api.get(API_ENDPOINTS.TUTORS_ANALYTICS, { params });
+    return response.data?.data || {};
+  },
 
-  unlockLead: (id, data) =>
-    api.post(API_ENDPOINTS.LEADS_UNLOCK(id), data),
+  unlockLead: (id) =>
+    api.post(API_ENDPOINTS.TUTORS_LEADS_UNLOCK(id), {}),
 
-  respondToLead: (id, data) =>
-    api.post(API_ENDPOINTS.LEADS_RESPOND(id), data),
+  purchaseCredits: (creditPackage) =>
+    api.post(API_ENDPOINTS.TUTORS_CREDITS_PURCHASE, { package: creditPackage }),
+
+  verifyCreditPayment: (data) =>
+    api.post(API_ENDPOINTS.TUTORS_CREDITS_VERIFY, data),
 };
 
 export const studentService = {
-  createEnquiry: (data) =>
-    api.post(API_ENDPOINTS.STUDENTS_ENQUIRY, data),
+  createEnquiry: (data) => {
+    const payload = {
+      firstName: data.firstName,
+      lastName: data.lastName,
+      email: data.email,
+      phone: data.phone,
+      city: data.city,
+      locality: data.locality || '',
+      class: data.grade,
+      board: data.board || 'Other',
+      subjects: [data.subject].filter(Boolean),
+      mode: data.mode || 'both',
+      budget: {
+        min: data.budget ? Number(data.budget) : undefined,
+        max: data.budget ? Number(data.budget) : undefined,
+      },
+      preferredTiming: data.preferredTime || '',
+      goals: data.description,
+      specialRequirements: data.title,
+    };
+    return api.post(API_ENDPOINTS.STUDENTS_ENQUIRY, payload);
+  },
 
   getProfile: () =>
     api.get(API_ENDPOINTS.STUDENTS_PROFILE),
 
   updateProfile: (data) =>
     api.put(API_ENDPOINTS.STUDENTS_UPDATE, data),
+
+  contact: (data) =>
+    api.post(API_ENDPOINTS.STUDENTS_CONTACT, data),
 };
 
 export const leadService = {
@@ -70,32 +122,52 @@ export const leadService = {
 };
 
 export const paymentService = {
-  getPayments: (params) =>
-    api.get(API_ENDPOINTS.PAYMENTS_LIST, { params }),
-
-  initiatePayment: (data) =>
-    api.post(API_ENDPOINTS.PAYMENTS_INITIATE, data),
-
-  verifyPayment: (data) =>
-    api.post(API_ENDPOINTS.PAYMENTS_VERIFY, data),
-
-  getPaymentHistory: (params) =>
-    api.get(API_ENDPOINTS.PAYMENTS_HISTORY, { params }),
+  getPaymentHistory: async (params) => {
+    const response = await api.get(API_ENDPOINTS.PAYMENTS_HISTORY, { params });
+    const payload = response.data?.data || {};
+    return {
+      ...payload,
+      payments: (payload.payments || []).map(mapPayment),
+    };
+  },
 };
 
 export const adminService = {
-  getDashboard: () =>
-    api.get(API_ENDPOINTS.ADMIN_DASHBOARD),
+  getDashboard: async () => {
+    const response = await api.get(API_ENDPOINTS.ADMIN_DASHBOARD);
+    return response.data?.data || {};
+  },
 
-  getTutors: (params) =>
-    api.get(API_ENDPOINTS.ADMIN_TUTORS, { params }),
+  getTutors: async (params) => {
+    const response = await api.get(API_ENDPOINTS.ADMIN_TUTORS, { params });
+    const payload = response.data?.data || {};
+    return {
+      ...payload,
+      tutors: (payload.tutors || []).map(mapTutor),
+    };
+  },
 
-  updateTutor: (id, data) =>
-    api.put(API_ENDPOINTS.ADMIN_TUTORS_UPDATE(id), data),
+  approveTutor: (id) =>
+    api.put(API_ENDPOINTS.ADMIN_TUTORS_APPROVE(id)),
 
-  getLeads: (params) =>
-    api.get(API_ENDPOINTS.ADMIN_LEADS, { params }),
+  suspendTutor: (id, reason) =>
+    api.put(API_ENDPOINTS.ADMIN_TUTORS_SUSPEND(id), { reason }),
 
-  getPayments: (params) =>
-    api.get(API_ENDPOINTS.ADMIN_PAYMENTS, { params }),
+  getLeads: async (params) => {
+    const response = await api.get(API_ENDPOINTS.ADMIN_LEADS, { params });
+    const payload = response.data?.data || {};
+    return {
+      ...payload,
+      leads: (payload.leads || []).map(mapLead),
+    };
+  },
+
+  getPayments: async (params) => {
+    const response = await api.get(API_ENDPOINTS.ADMIN_PAYMENTS, { params });
+    const payload = response.data?.data || {};
+    return {
+      ...payload,
+      payments: (payload.payments || []).map(mapPayment),
+    };
+  },
 };

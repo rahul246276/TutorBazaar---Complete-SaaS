@@ -46,17 +46,16 @@ export const Modal = ({
   title,
   children,
   size = 'md',
-  className,
 }) => {
   if (!isOpen) return null;
 
-  const sizes = {
-    sm: 'max-w-sm',
-    md: 'max-w-md',
-    lg: 'max-w-lg',
-    xl: 'max-w-xl',
-    '2xl': 'max-w-2xl',
-  };
+  const sizeClass = {
+    sm: 'sm:max-w-sm',
+    md: 'sm:max-w-md',
+    lg: 'sm:max-w-lg',
+    xl: 'sm:max-w-xl',
+    '2xl': 'sm:max-w-2xl',
+  }[size] || 'sm:max-w-md';
 
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto">
@@ -66,7 +65,7 @@ export const Modal = ({
           onClick={onClose}
         />
 
-        <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:w-full sm:max-w-lg"
+        <div className={`inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:w-full ${sizeClass}`}
           style={{ maxWidth: 'calc(100vw - 32px)' }}>
           {title && (
             <div className="flex items-center justify-between px-4 py-4 sm:px-6 border-b border-gray-200">

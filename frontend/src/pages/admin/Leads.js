@@ -8,8 +8,7 @@ const Leads = () => {
   const [status, setStatus] = useState('all');
   const { data: leadsData, isLoading } = useQuery(
     ['adminLeads', status],
-    () => adminService.getLeads({ status: status === 'all' ? '' : status, page: 1, limit: 20 }),
-    { select: (response) => response.data?.data?.leads || [] }
+    () => adminService.getLeads({ status: status === 'all' ? '' : status, page: 1, limit: 20 })
   );
 
   if (isLoading) return <Loading message="Loading leads..." />;
@@ -22,7 +21,7 @@ const Leads = () => {
       </div>
 
       <div className="flex gap-2 mb-6">
-        {['all', 'open', 'in_progress', 'closed'].map(st => (
+        {['all', 'active', 'locked', 'converted', 'expired'].map(st => (
           <button
             key={st}
             onClick={() => setStatus(st)}
@@ -37,9 +36,9 @@ const Leads = () => {
         ))}
       </div>
 
-      {leadsData && leadsData.length > 0 ? (
+      {leadsData?.leads?.length > 0 ? (
         <div className="space-y-4">
-          {leadsData.map(lead => (
+          {leadsData.leads.map(lead => (
             <Card key={lead.id}>
               <CardBody>
                 <div className="flex items-start justify-between">
@@ -48,8 +47,8 @@ const Leads = () => {
                     <p className="text-sm text-gray-600 mt-1">{lead.description}</p>
                   </div>
                   <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                    lead.status === 'open' ? 'bg-green-100 text-green-800' :
-                    lead.status === 'in_progress' ? 'bg-blue-100 text-blue-800' :
+                    lead.status === 'active' ? 'bg-green-100 text-green-800' :
+                    lead.status === 'locked' ? 'bg-blue-100 text-blue-800' :
                     'bg-gray-100 text-gray-800'
                   }`}>
                     {lead.status}

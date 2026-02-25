@@ -1,13 +1,14 @@
-import React from 'react';
+import React, { Suspense, lazy } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from 'react-query';
 import { Toaster } from 'react-hot-toast';
+import './styles/index.css';
 
 // Context
 import { AuthProvider } from './context/AuthContext';
 
 // Components
-import { ProtectedRoute, TutorRoute, AdminRoute } from './components/ProtectedRoute';
+import { TutorRoute, AdminRoute } from './components/ProtectedRoute';
 import { NotFound, ErrorBoundary } from './components/ErrorPages';
 
 // Layouts
@@ -16,29 +17,26 @@ import TutorLayout from './components/layout/TutorLayout';
 import AdminLayout from './components/layout/AdminLayout';
 
 // Public Pages
-import Home from './pages/public/Home';
-import FindTutor from './pages/public/FindTutor';
-import TutorProfile from './pages/public/TutorProfile';
-import Enquiry from './pages/public/Enquiry';
-import Contact from './pages/public/Contact';
-import Login from './pages/public/Login';
-import Register from './pages/public/Register';
+const Home = lazy(() => import('./pages/public/Home'));
+const FindTutor = lazy(() => import('./pages/public/FindTutor'));
+const TutorProfile = lazy(() => import('./pages/public/TutorProfile'));
+const Enquiry = lazy(() => import('./pages/public/Enquiry'));
+const Contact = lazy(() => import('./pages/public/Contact'));
+const Login = lazy(() => import('./pages/public/Login'));
+const Register = lazy(() => import('./pages/public/Register'));
 
 // Tutor Pages
-import TutorDashboard from './pages/tutor/Dashboard';
-import TutorLeads from './pages/tutor/Leads';
-import TutorCredits from './pages/tutor/Credits';
-import TutorProfileEdit from './pages/tutor/Profile';
-import TutorAnalytics from './pages/tutor/Analytics';
+const TutorDashboard = lazy(() => import('./pages/tutor/Dashboard'));
+const TutorLeads = lazy(() => import('./pages/tutor/Leads'));
+const TutorCredits = lazy(() => import('./pages/tutor/Credits'));
+const TutorProfileEdit = lazy(() => import('./pages/tutor/Profile'));
+const TutorAnalytics = lazy(() => import('./pages/tutor/Analytics'));
 
 // Admin Pages
-import AdminDashboard from './pages/admin/Dashboard';
-import AdminTutors from './pages/admin/Tutors';
-import AdminLeads from './pages/admin/Leads';
-import AdminPayments from './pages/admin/Payments';
-
-// Styles
-import './styles/index.css';
+const AdminDashboard = lazy(() => import('./pages/admin/Dashboard'));
+const AdminTutors = lazy(() => import('./pages/admin/Tutors'));
+const AdminLeads = lazy(() => import('./pages/admin/Leads'));
+const AdminPayments = lazy(() => import('./pages/admin/Payments'));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -55,52 +53,54 @@ function App() {
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
           <Router>
-            <Routes>
-              {/* Public Routes */}
-              <Route path="/" element={<MainLayout />}>
-                <Route index element={<Home />} />
-                <Route path="find-tutor" element={<FindTutor />} />
-                <Route path="tutor/:id" element={<TutorProfile />} />
-                <Route path="enquiry" element={<Enquiry />} />
-                <Route path="contact" element={<Contact />} />
-                <Route path="login" element={<Login />} />
-                <Route path="register" element={<Register />} />
-              </Route>
+            <Suspense fallback={<div className="min-h-screen flex items-center justify-center text-gray-600">Loading...</div>}>
+              <Routes>
+                {/* Public Routes */}
+                <Route path="/" element={<MainLayout />}>
+                  <Route index element={<Home />} />
+                  <Route path="find-tutor" element={<FindTutor />} />
+                  <Route path="tutor/:id" element={<TutorProfile />} />
+                  <Route path="enquiry" element={<Enquiry />} />
+                  <Route path="contact" element={<Contact />} />
+                  <Route path="login" element={<Login />} />
+                  <Route path="register" element={<Register />} />
+                </Route>
 
-              {/* Tutor Routes */}
-              <Route
-                path="/tutor"
-                element={
-                  <TutorRoute>
-                    <TutorLayout />
-                  </TutorRoute>
-                }
-              >
-                <Route path="dashboard" element={<TutorDashboard />} />
-                <Route path="leads" element={<TutorLeads />} />
-                <Route path="credits" element={<TutorCredits />} />
-                <Route path="profile" element={<TutorProfileEdit />} />
-                <Route path="analytics" element={<TutorAnalytics />} />
-              </Route>
+                {/* Tutor Routes */}
+                <Route
+                  path="/tutor"
+                  element={
+                    <TutorRoute>
+                      <TutorLayout />
+                    </TutorRoute>
+                  }
+                >
+                  <Route path="dashboard" element={<TutorDashboard />} />
+                  <Route path="leads" element={<TutorLeads />} />
+                  <Route path="credits" element={<TutorCredits />} />
+                  <Route path="profile" element={<TutorProfileEdit />} />
+                  <Route path="analytics" element={<TutorAnalytics />} />
+                </Route>
 
-              {/* Admin Routes */}
-              <Route
-                path="/admin"
-                element={
-                  <AdminRoute>
-                    <AdminLayout />
-                  </AdminRoute>
-                }
-              >
-                <Route path="dashboard" element={<AdminDashboard />} />
-                <Route path="tutors" element={<AdminTutors />} />
-                <Route path="leads" element={<AdminLeads />} />
-                <Route path="payments" element={<AdminPayments />} />
-              </Route>
+                {/* Admin Routes */}
+                <Route
+                  path="/admin"
+                  element={
+                    <AdminRoute>
+                      <AdminLayout />
+                    </AdminRoute>
+                  }
+                >
+                  <Route path="dashboard" element={<AdminDashboard />} />
+                  <Route path="tutors" element={<AdminTutors />} />
+                  <Route path="leads" element={<AdminLeads />} />
+                  <Route path="payments" element={<AdminPayments />} />
+                </Route>
 
-              {/* 404 Page */}
-              <Route path="*" element={<NotFound />} />
-            </Routes>
+                {/* 404 Page */}
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </Suspense>
           </Router>
           <Toaster position="top-right" />
         </AuthProvider>

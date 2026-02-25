@@ -4,6 +4,7 @@ const { auth, authorize } = require('../middleware/auth');
 const Student = require('../models/Student');
 const Lead = require('../models/Lead');
 const logger = require('../utils/logger');
+const { sendEmail } = require('../utils/email');
 
 // Create new enquiry/lead
 router.post('/enquiry', async (req, res, next) => {
@@ -103,6 +104,43 @@ router.get('/profile', auth, authorize('student'), async (req, res, next) => {
     res.json({
       success: true,
       data: { student },
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// Contact form
+router.post('/contact', async (req, res, next) => {
+  try {
+    const { name, email, phone, subject, message } = req.body;
+
+    if (!name || !email || !subject || !message) {
+      return res.status(400).json({
+        success: false,
+        message: 'Name, email, subject and message are required',
+      });
+    }
+
+    const supportEmail = process.env.SUPPORT_EMAIL || process.env.SMTP_USER;
+    if (supportEmail) {
+      await sendEmail({
+        to: supportEmail,
+        subject: `[TutorBazaar Contact] ${subject}`,
+        html: `
+          <h3>New Contact Request</h3>
+          <p><strong>Name:</strong> ${name}</p>
+          <p><strong>Email:</strong> ${email}</p>
+          <p><strong>Phone:</strong> ${phone || 'Not provided'}</p>
+          <p><strong>Message:</strong></p>
+          <p>${message}</p>
+        `,
+      });
+    }
+
+    res.json({
+      success: true,
+      message: 'Message received successfully',
     });
   } catch (error) {
     next(error);

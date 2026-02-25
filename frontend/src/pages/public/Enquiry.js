@@ -4,18 +4,21 @@ import { useNavigate } from 'react-router-dom';
 import { studentService } from '../../services';
 import { Input, Button, Card, CardBody } from '../../components/common';
 import { validateEnquiryForm } from '../../utils/validation';
-import { FileText, MapPin, BookOpen, Phone, Mail } from 'lucide-react';
+import { FileText } from 'lucide-react';
 import { SUBJECTS, CITIES, GRADES } from '../../constants';
 import toast from 'react-hot-toast';
 
 const Enquiry = () => {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
+    firstName: '',
+    lastName: '',
     title: '',
     description: '',
     subject: '',
     grade: '',
-    location: '',
+    city: '',
+    locality: '',
     budget: '',
     email: '',
     phone: '',
@@ -73,6 +76,23 @@ const Enquiry = () => {
 
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Title */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <Input
+                label="First Name"
+                name="firstName"
+                value={formData.firstName}
+                onChange={handleChange}
+                required
+              />
+              <Input
+                label="Last Name"
+                name="lastName"
+                value={formData.lastName}
+                onChange={handleChange}
+                required
+              />
+            </div>
+
             <Input
               label="Title"
               name="title"
@@ -153,8 +173,8 @@ const Enquiry = () => {
                   <span className="text-red-500 ml-1">*</span>
                 </label>
                 <select
-                  name="location"
-                  value={formData.location}
+                  name="city"
+                  value={formData.city}
                   onChange={handleChange}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
                   required
@@ -164,8 +184,8 @@ const Enquiry = () => {
                     <option key={city} value={city}>{city}</option>
                   ))}
                 </select>
-                {errors.location && (
-                  <p className="mt-1 text-sm text-red-500">{errors.location}</p>
+                {errors.city && (
+                  <p className="mt-1 text-sm text-red-500">{errors.city}</p>
                 )}
               </div>
 
@@ -207,6 +227,15 @@ const Enquiry = () => {
             </div>
 
             {/* Preferred Time */}
+            <Input
+              label="Locality/Area"
+              name="locality"
+              type="text"
+              value={formData.locality}
+              onChange={handleChange}
+              placeholder="e.g., Rajouri Garden"
+            />
+
             <Input
               label="Preferred Time for Classes"
               name="preferredTime"

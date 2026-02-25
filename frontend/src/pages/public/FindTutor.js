@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
+import { Link } from 'react-router-dom';
 import { useQuery } from 'react-query';
-import { Search, MapPin, Star, DollarSign, Clock } from 'lucide-react';
+import { Search, MapPin, Star, DollarSign } from 'lucide-react';
 import { tutorService } from '../../services';
 import { Input, Button, Card, CardBody, Loading, EmptyState } from '../../components/common';
 import { SUBJECTS, CITIES } from '../../constants';
@@ -26,14 +27,11 @@ const FindTutor = () => {
         search: debouncedSearch,
         page: 1,
         limit: 20,
-      }),
-    {
-      select: (response) => response.data?.data || [],
-    }
+      })
   );
 
   const tutors = useMemo(() => {
-    let filtered = tutorsData || [];
+    let filtered = tutorsData?.tutors || [];
     if (searchParams.minRating > 0) {
       filtered = filtered.filter(t => (t.rating || 0) >= searchParams.minRating);
     }
@@ -42,7 +40,7 @@ const FindTutor = () => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setSearchParams(prev => ({ ...prev, [name]: value }));
+    setSearchParams(prev => ({ ...prev, [name]: name === 'minRating' ? Number(value) : value }));
   };
 
   return (
@@ -142,7 +140,7 @@ const FindTutor = () => {
                           <span>{tutor.city}</span>
                         </div>
                       )}
-                      {tutor.subjects && (
+                      {tutor.subjects?.length > 0 && (
                         <div className="flex items-center space-x-2">
                           <span className="font-medium">Subjects:</span>
                           <span>{tutor.subjects.join(', ')}</span>
@@ -154,12 +152,6 @@ const FindTutor = () => {
                           <span>{formatCurrency(tutor.hourlyRate)}/hour</span>
                         </div>
                       )}
-                      {tutor.experienceYears && (
-                        <div className="flex items-center space-x-2">
-                          <Clock className="h-4 w-4" />
-                          <span>{tutor.experienceYears} years experience</span>
-                        </div>
-                      )}
                     </div>
 
                     {/* Bio */}
@@ -168,9 +160,11 @@ const FindTutor = () => {
                     )}
 
                     {/* Action Button */}
-                    <Button className="w-full" variant="primary">
-                      View Profile
-                    </Button>
+                    <Link to={`/tutor/${tutor.id}`}>
+                      <Button className="w-full" variant="primary">
+                        View Profile
+                      </Button>
+                    </Link>
                   </CardBody>
                 </Card>
               ))}

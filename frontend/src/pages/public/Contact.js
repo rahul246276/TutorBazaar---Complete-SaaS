@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
-import { Mail, Phone, MapPin, Clock } from 'lucide-react';
+import { useMutation } from 'react-query';
+import { Mail, Phone, Clock } from 'lucide-react';
 import { Input, Button, Card, CardBody } from '../../components/common';
+import { studentService } from '../../services';
 import toast from 'react-hot-toast';
 
 const Contact = () => {
@@ -11,7 +13,18 @@ const Contact = () => {
     subject: '',
     message: '',
   });
-  const [isLoading, setIsLoading] = useState(false);
+  const { mutate: submitContact, isLoading } = useMutation(
+    (payload) => studentService.contact(payload),
+    {
+      onSuccess: () => {
+        toast.success('Thank you! We will get back to you soon.');
+        setFormData({ name: '', email: '', phone: '', subject: '', message: '' });
+      },
+      onError: (error) => {
+        toast.error(error.response?.data?.message || 'Failed to send message');
+      },
+    }
+  );
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -20,17 +33,7 @@ const Contact = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setIsLoading(true);
-    try {
-      // Simulate sending contact email
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      toast.success('Thank you! We will get back to you soon.');
-      setFormData({ name: '', email: '', phone: '', subject: '', message: '' });
-    } catch (error) {
-      toast.error('Failed to send message');
-    } finally {
-      setIsLoading(false);
-    }
+    submitContact(formData);
   };
 
   return (
@@ -54,7 +57,7 @@ const Contact = () => {
               <h3 className="text-lg font-semibold">Email</h3>
               <p className="text-gray-600">
                 <a href="mailto:support@tutorbazaar.com" className="hover:text-primary-600">
-                  support@tutorbazaar.com
+                  contact24by7tutorbazar@gmail.com
                 </a>
               </p>
             </CardBody>
@@ -68,7 +71,7 @@ const Contact = () => {
               <h3 className="text-lg font-semibold">Phone</h3>
               <p className="text-gray-600">
                 <a href="tel:+919876543210" className="hover:text-primary-600">
-                  +91 98765 43210
+                  +91 92055 67844
                 </a>
               </p>
             </CardBody>

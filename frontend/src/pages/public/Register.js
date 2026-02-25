@@ -3,7 +3,8 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { Input, Button } from '../../components/common';
 import { validateRegistrationForm } from '../../utils/validation';
-import { Mail, Lock, User, UserCheck, GraduationCap, Users } from 'lucide-react';
+import { UserCheck, GraduationCap, Users } from 'lucide-react';
+import { CITIES, GRADES } from '../../constants';
 
 const Register = () => {
   const navigate = useNavigate();
@@ -14,6 +15,8 @@ const Register = () => {
     lastName: '',
     email: '',
     phone: '',
+    city: '',
+    class: '',
     password: '',
     confirmPassword: '',
     role: '',
@@ -164,6 +167,46 @@ const Register = () => {
               placeholder="10-digit number"
               required
             />
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">City</label>
+              <select
+                name="city"
+                value={formData.city}
+                onChange={handleChange}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                required
+              >
+                <option value="">Select City</option>
+                {CITIES.map((city) => (
+                  <option key={city} value={city}>
+                    {city}
+                  </option>
+                ))}
+              </select>
+              {errors.city && <p className="mt-1 text-sm text-red-500">{errors.city}</p>}
+            </div>
+
+            {formData.role === 'student' && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Class/Grade</label>
+                <select
+                  name="class"
+                  value={formData.class}
+                  onChange={handleChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  required
+                >
+                  <option value="">Select Class</option>
+                  {GRADES.map((grade) => (
+                    <option key={grade} value={grade}>
+                      {grade}
+                    </option>
+                  ))}
+                </select>
+                {errors.class && <p className="mt-1 text-sm text-red-500">{errors.class}</p>}
+              </div>
+            )}
 
             {/* Password Fields */}
             <Input
