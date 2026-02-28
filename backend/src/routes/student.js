@@ -3,6 +3,7 @@ const router = express.Router();
 const { auth, authorize } = require('../middleware/auth');
 const Student = require('../models/Student');
 const Lead = require('../models/Lead');
+const ContactMessage = require('../models/ContactMessage');
 const logger = require('../utils/logger');
 const { sendEmail } = require('../utils/email');
 
@@ -122,25 +123,47 @@ router.post('/contact', async (req, res, next) => {
       });
     }
 
+    const savedMessage = await ContactMessage.create({
+      name,
+      email,
+      phone: phone || '',
+      subject,
+      message,
+      source: 'frontend_contact_form',
+    });
+
     const supportEmail = process.env.SUPPORT_EMAIL || process.env.SMTP_USER;
-    if (supportEmail) {
-      await sendEmail({
-        to: supportEmail,
-        subject: `[TutorBazaar Contact] ${subject}`,
-        html: `
-          <h3>New Contact Request</h3>
-          <p><strong>Name:</strong> ${name}</p>
-          <p><strong>Email:</strong> ${email}</p>
-          <p><strong>Phone:</strong> ${phone || 'Not provided'}</p>
-          <p><strong>Message:</strong></p>
-          <p>${message}</p>
-        `,
-      });
+    const smtpConfigured =
+      Boolean(process.env.SMTP_HOST) &&
+      Boolean(process.env.SMTP_PORT) &&
+      Boolean(process.env.SMTP_USER) &&
+      Boolean(process.env.SMTP_PASS);
+
+    if (supportEmail && smtpConfigured) {
+      try {
+        await sendEmail({
+          to: supportEmail,
+          subject: `[TutorBazaar Contact] ${subject}`,
+          html: `
+            <h3>New Contact Request</h3>
+            <p><strong>Name:</strong> ${name}</p>
+            <p><strong>Email:</strong> ${email}</p>
+            <p><strong>Phone:</strong> ${phone || 'Not provided'}</p>
+            <p><strong>Message:</strong></p>
+            <p>${message}</p>
+          `,
+        });
+      } catch (emailError) {
+        logger.error('Contact email send failed:', emailError);
+      }
     }
 
     res.json({
       success: true,
       message: 'Message received successfully',
+      data: {
+        contactId: savedMessage._id,
+      },
     });
   } catch (error) {
     next(error);
